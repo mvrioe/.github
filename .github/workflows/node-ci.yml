@@ -1,0 +1,40 @@
+# Reusable CI for Node.js projects managed with pnpm.
+# Call from a repo: uses: mvrioe/.github/.github/workflows/node-ci.yml@<sha>
+name: node-ci
+
+on:
+  workflow_call:
+    inputs:
+      node-version-file:
+        description: File that pins the Node.js version (.nvmrc, .node-version or package.json)
+        type: string
+        default: .nvmrc
+      working-directory:
+        type: string
+        default: .
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ${{ inputs.working-directory }}/${{ inputs.node-version-file }}
+          cache: pnpm
+          cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+      # --ignore-scripts: dependency install scripts never run in CI.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm run --if-present lint
+      - run: pnpm run --if-present typecheck
+      - run: pnpm run --if-present test

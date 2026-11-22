@@ -1,0 +1,25 @@
+# Reusable dependency review: fails a PR that adds a dependency with a known vulnerability.
+# Call from a repo on pull_request: uses: mvrioe/.github/.github/workflows/dependency-review.yml@<sha>
+name: dependency-review
+
+on:
+  workflow_call:
+    inputs:
+      fail-on-severity:
+        type: string
+        default: moderate
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
+        with:
+          fail-on-severity: ${{ inputs.fail-on-severity }}

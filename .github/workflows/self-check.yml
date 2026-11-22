@@ -1,0 +1,19 @@
+# Checks this repo's own workflows with CodeQL (actions language).
+name: self-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    permissions:
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/codeql.yml
+    with:
+      languages: '["actions"]'
