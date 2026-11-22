@@ -1,0 +1,35 @@
+# Reusable CI for Flutter/Dart projects. CodeQL does not support Dart, so analysis comes from here.
+# Call from a repo: uses: mvrioe/.github/.github/workflows/flutter-ci.yml@<sha>
+name: flutter-ci
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        type: string
+        default: .
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Third-party action (not GitHub-verified): pinned by SHA and allowed explicitly by gh-harden.sh.
+      # The version comes from .fvmrc, the same pin fvm uses locally.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: ${{ inputs.working-directory }}/.fvmrc
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
